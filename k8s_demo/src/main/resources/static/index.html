@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>같은 카드 찾기 게임</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 15px;
+        }
+
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: #2e3d49;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: transform 0.3s;
+            user-select: none;
+        }
+
+        .card.flipped {
+            background-color: #fff;
+            color: #000;
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            background-color: #4caf50;
+            color: #fff;
+            cursor: default;
+        }
+
+        .scoreboard {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            background-color: #2196f3;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>같은 카드 찾기 게임</h1>
+    <div class="game-board" id="gameBoard"></div>
+    <div class="scoreboard">
+        시도: <span id="attempts">0</span> | 맞춘 개수: <span id="matches">0</span>
+    </div>
+    <button id="restartBtn">다시 시작</button>
+
+    <script>
+        const board = document.getElementById('gameBoard');
+        const attemptsDisplay = document.getElementById('attempts');
+        const matchesDisplay = document.getElementById('matches');
+        const restartBtn = document.getElementById('restartBtn');
+
+        let cardValues = ['🍎','🍌','🍒','🍇','🍉','🍍','🥝','🍓'];
+        let cards = [];
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+        let attempts = 0;
+        let matches = 0;
+
+        function initGame() {
+            cards = [...cardValues, ...cardValues];
+            cards.sort(() => Math.random() - 0.5);
+
+            board.innerHTML = '';
+            attempts = 0;
+            matches = 0;
+            attemptsDisplay.textContent = attempts;
+            matchesDisplay.textContent = matches;
+
+            cards.forEach((value, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.value = value;
+                card.addEventListener('click', flipCard);
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flipped');
+            this.textContent = this.dataset.value;
+
+            if (!firstCard) {
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            attempts++;
+            attemptsDisplay.textContent = attempts;
+            checkMatch();
+        }
+
+        function checkMatch() {
+            if (firstCard.dataset.value === secondCard.dataset.value) {
+                firstCard.classList.add('matched');
+                secondCard.classList.add('matched');
+                matches++;
+                matchesDisplay.textContent = matches;
+                resetFlip();
+                if (matches === cardValues.length) {
+                    setTimeout(() => alert(`축하합니다! ${attempts}번 만에 모두 맞췄습니다!`), 300);
+                }
+            } else {
+                lockBoard = true;
+                setTimeout(() => {
+                    firstCard.classList.remove('flipped');
+                    secondCard.classList.remove('flipped');
+                    firstCard.textContent = '';
+                    secondCard.textContent = '';
+                    resetFlip();
+                }, 1000);
+            }
+        }
+
+        function resetFlip() {
+            [firstCard, secondCard] = [null, null];
+            lockBoard = false;
+        }
+
+        restartBtn.addEventListener('click', initGame);
+
+        initGame();
+    </script>
+
+</body>
+</html>
