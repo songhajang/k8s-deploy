@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>콘서트 목록 - 콘서트 티켓팅</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .concert-card {
+            transition: transform 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .concert-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .concert-image {
+            height: 200px;
+            object-fit: cover;
+        }
+        .category-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 40px 0;
+            margin-top: 50px;
+        }
+        .filter-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-music me-2"></i>콘서트 티켓팅
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">홈</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/concerts">콘서트</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">로그인</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">회원가입</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="py-5 bg-primary text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 fw-bold">콘서트 목록</h1>
+                    <p class="lead">다양한 콘서트를 찾아보세요</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Section -->
+    <section class="py-4">
+        <div class="container">
+            <div class="filter-section">
+                <form action="/concerts" method="get">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">검색</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   th:value="${searchKeyword}" placeholder="아티스트나 콘서트명을 입력하세요">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">카테고리</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">모든 카테고리</option>
+                                <option th:each="category : ${categories}" 
+                                        th:value="${category}" 
+                                        th:text="${category}"
+                                        th:selected="${category == selectedCategory}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i> 검색
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/concerts" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-refresh"></i> 초기화
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Concerts Grid -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>
+                            <span th:if="${selectedCategory}" th:text="'카테고리: ' + ${selectedCategory}"></span>
+                            <span th:if="${searchKeyword}" th:text="'검색: ' + ${searchKeyword}"></span>
+                            <span th:if="${!selectedCategory && !searchKeyword}">모든 콘서트</span>
+                        </h3>
+                        <span class="badge bg-primary fs-6" th:text="${#lists.size(concerts)} + '개 콘서트'"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${#lists.isEmpty(concerts)}" class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">검색 결과가 없습니다</h4>
+                <p class="text-muted">다른 검색어나 카테고리를 시도해보세요</p>
+                <a href="/concerts" class="btn btn-primary">모든 콘서트 보기</a>
+            </div>
+            
+            <div class="row g-4">
+                <div th:each="concert : ${concerts}" class="col-lg-4 col-md-6">
+                    <div class="card concert-card h-100">
+                        <div class="position-relative">
+                            <img th:src="${concert.imageUrl}" 
+                                 th:alt="${concert.title}" 
+                                 class="card-img-top concert-image">
+                            <span class="category-badge" th:text="${concert.category}"></span>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title" th:text="${concert.title}"></h5>
+                            <p class="card-text text-muted" th:text="${concert.artist}"></p>
+                            <p class="card-text">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                <span th:text="${concert.venue}"></span>
+                            </p>
+                            <p class="card-text">
+                                <i class="fas fa-calendar me-2"></i>
+                                <span th:text="${#temporals.format(concert.concertDate, 'yyyy-MM-dd HH:mm')}"></span>
+                            </p>
+                            <p class="card-text">
+                                <i class="fas fa-ticket-alt me-2"></i>
+                                <span th:text="${concert.availableSeats} + ' / ' + ${concert.totalSeats} + ' 좌석'"></span>
+                            </p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h5 text-primary mb-0">
+                                        <span th:text="${#numbers.formatInteger(concert.price, 0, 'COMMA')}"></span>원
+                                    </span>
+                                    <a th:href="@{/concert/{id}(id=${concert.id})}" 
+                                       class="btn btn-primary">자세히 보기</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>콘서트 티켓팅</h5>
+                    <p>국내 최고의 콘서트 티켓팅 플랫폼입니다.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>고객센터</h5>
+                    <p>전화: 1588-0000</p>
+                    <p>이메일: support@concert-ticket.co.kr</p>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2024 콘서트 티켓팅. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

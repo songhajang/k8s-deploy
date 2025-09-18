@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 예매 - 콘서트 티켓팅</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .bookings-container {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+        .booking-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+        }
+        .booking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .booking-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+        }
+        .booking-body {
+            padding: 20px;
+        }
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 40px 0;
+            margin-top: 50px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-music me-2"></i>콘서트 티켓팅
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">홈</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/concerts">콘서트</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/my-bookings">내 예매</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">로그아웃</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="py-5 bg-primary text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h1 class="display-4 fw-bold">내 예매 내역</h1>
+                    <p class="lead">예매한 콘서트 티켓을 확인하고 관리하세요</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="bookings-container">
+        <div class="container">
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- User Info -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1">안녕하세요, <span th:text="${user.name}"></span>님!</h5>
+                                    <p class="text-muted mb-0">총 <span th:text="${#lists.size(bookings)}"></span>건의 예매 내역이 있습니다.</p>
+                                </div>
+                                <a href="/concerts" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>새로운 예매
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bookings List -->
+            <div th:if="${#lists.isEmpty(bookings)}" class="empty-state">
+                <i class="fas fa-ticket-alt"></i>
+                <h4>예매 내역이 없습니다</h4>
+                <p>아직 예매한 콘서트가 없습니다.<br>다양한 콘서트를 둘러보고 예매해보세요!</p>
+                <a href="/concerts" class="btn btn-primary btn-lg">
+                    <i class="fas fa-music me-2"></i>콘서트 보기
+                </a>
+            </div>
+            
+            <div th:each="booking : ${bookings}" class="booking-card">
+                <div class="booking-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1" th:text="${booking.ticketNumber}"></h5>
+                            <p class="mb-0 opacity-75" th:text="${#temporals.format(booking.bookingDate, 'yyyy년 MM월 dd일 HH:mm')} + ' 예매'"></p>
+                        </div>
+                        <span th:class="'badge status-badge ' + 
+                                      (${booking.status.name() == 'CONFIRMED'} ? 'bg-success' : 
+                                        ${booking.status.name() == 'PENDING'} ? 'bg-warning' : 
+                                        ${booking.status.name() == 'CANCELLED'} ? 'bg-danger' : 'bg-info')"
+                              th:text="${booking.status}"></span>
+                    </div>
+                </div>
+                <div class="booking-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="text-primary mb-2">공연 정보</h6>
+                            <p class="mb-1"><strong>공연명:</strong> <span th:text="${booking.concertId}"></span></p>
+                            <p class="mb-1"><strong>좌석:</strong> 
+                                <span th:each="seat, iterStat : ${booking.seatNumbers}" 
+                                      th:text="${seat} + (${!iterStat.last} ? ', ' : '')"></span>
+                            </p>
+                            <p class="mb-1"><strong>결제 방법:</strong> <span th:text="${booking.paymentMethod}"></span></p>
+                            <p class="mb-0"><strong>결제일:</strong> 
+                                <span th:if="${booking.paymentDate}" th:text="${#temporals.format(booking.paymentDate, 'yyyy년 MM월 dd일 HH:mm')}"></span>
+                                <span th:unless="${booking.paymentDate}" class="text-muted">미결제</span>
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <h5 class="text-primary mb-3" th:text="${#numbers.formatInteger(booking.totalPrice, 0, 'COMMA')} + '원'"></h5>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button th:if="${booking.status.name() == 'CONFIRMED'}" 
+                                        class="btn btn-outline-danger btn-sm"
+                                        th:onclick="'cancelBooking(' + ${booking.id} + ')'">
+                                    <i class="fas fa-times me-1"></i>취소
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-print me-1"></i>티켓 출력
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>콘서트 티켓팅</h5>
+                    <p>국내 최고의 콘서트 티켓팅 플랫폼입니다.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>고객센터</h5>
+                    <p>전화: 1588-0000</p>
+                    <p>이메일: support@concert-ticket.co.kr</p>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2024 콘서트 티켓팅. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function cancelBooking(bookingId) {
+            if (confirm('정말로 예매를 취소하시겠습니까?\n취소 후에는 복구할 수 없습니다.')) {
+                // 취소 폼 생성 및 제출
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/booking/cancel/' + bookingId;
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = 'csrf-token-value'; // 실제로는 CSRF 토큰을 사용해야 함
+                
+                form.appendChild(csrfToken);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

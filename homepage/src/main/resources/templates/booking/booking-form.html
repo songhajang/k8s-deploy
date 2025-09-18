@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>예매하기 - 콘서트 티켓팅</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .booking-container {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+        .booking-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .booking-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .booking-body {
+            padding: 40px;
+        }
+        .concert-info {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .seat-info {
+            background-color: #e3f2fd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .payment-method {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .payment-method:hover {
+            border-color: #667eea;
+            background-color: #f8f9fa;
+        }
+        .payment-method.selected {
+            border-color: #667eea;
+            background-color: #e3f2fd;
+        }
+        .payment-method input[type="radio"] {
+            display: none;
+        }
+        .btn-booking {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .btn-booking:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 40px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-music me-2"></i>콘서트 티켓팅
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">홈</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/concerts">콘서트</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/my-bookings">내 예매</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">로그아웃</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="booking-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="booking-card">
+                        <div class="booking-header">
+                            <h2 class="mb-0">
+                                <i class="fas fa-ticket-alt me-2"></i>예매하기
+                            </h2>
+                            <p class="mb-0 mt-2">티켓 예매를 완료하세요</p>
+                        </div>
+                        <div class="booking-body">
+                            <!-- Error Message -->
+                            <div th:if="${error}" class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span th:text="${error}"></span>
+                            </div>
+                            
+                            <!-- Concert Information -->
+                            <div class="concert-info">
+                                <h4 class="mb-3">
+                                    <i class="fas fa-music me-2"></i>공연 정보
+                                </h4>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 th:text="${concert.title}"></h5>
+                                        <p class="text-muted mb-2" th:text="${concert.artist}"></p>
+                                        <p class="mb-1">
+                                            <i class="fas fa-map-marker-alt me-2"></i>
+                                            <span th:text="${concert.venue}"></span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <i class="fas fa-calendar me-2"></i>
+                                            <span th:text="${#temporals.format(concert.concertDate, 'yyyy년 MM월 dd일 HH:mm')}"></span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <i class="fas fa-ticket-alt me-2"></i>
+                                            <span th:text="${concert.availableSeats} + ' / ' + ${concert.totalSeats} + ' 좌석'"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Selected Seats -->
+                            <div class="seat-info">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-chair me-2"></i>선택된 좌석
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-2"><strong>좌석 번호:</strong></p>
+                                        <div th:each="seat : ${selectedSeats}" class="badge bg-primary me-2 mb-2" th:text="${seat}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-2"><strong>총 좌석 수:</strong> <span th:text="${#lists.size(selectedSeats)} + '석'"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- User Information -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-user me-2"></i>예매자 정보
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>이름:</strong> <span th:text="${user.name}"></span></p>
+                                        <p><strong>아이디:</strong> <span th:text="${user.username}"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>이메일:</strong> <span th:text="${user.email}"></span></p>
+                                        <p><strong>전화번호:</strong> <span th:text="${user.phone}"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Method -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-credit-card me-2"></i>결제 방법
+                                </h5>
+                                <div class="payment-methods">
+                                    <label class="payment-method" for="card">
+                                        <input type="radio" id="card" name="paymentMethod" value="카드결제" required>
+                                        <i class="fas fa-credit-card fa-2x mb-2 d-block text-primary"></i>
+                                        <div>카드결제</div>
+                                    </label>
+                                    <label class="payment-method" for="bank">
+                                        <input type="radio" id="bank" name="paymentMethod" value="계좌이체" required>
+                                        <i class="fas fa-university fa-2x mb-2 d-block text-primary"></i>
+                                        <div>계좌이체</div>
+                                    </label>
+                                    <label class="payment-method" for="phone">
+                                        <input type="radio" id="phone" name="paymentMethod" value="휴대폰결제" required>
+                                        <i class="fas fa-mobile-alt fa-2x mb-2 d-block text-primary"></i>
+                                        <div>휴대폰결제</div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Total Price -->
+                            <div class="alert alert-info">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">총 결제 금액</h5>
+                                    <h4 class="mb-0 text-primary" id="totalPrice">
+                                        <span th:each="seat : ${selectedSeats}" th:text="${#numbers.formatInteger(concert.price, 0, 'COMMA')}"></span>원
+                                    </h4>
+                                </div>
+                            </div>
+                            
+                            <!-- Booking Form -->
+                            <form th:action="@{/booking/{id}(id=${concert.id})}" method="post" id="bookingForm">
+                                <div class="d-flex gap-3">
+                                    <button type="submit" class="btn btn-primary btn-booking flex-fill">
+                                        <i class="fas fa-check me-2"></i>예매 완료
+                                    </button>
+                                    <a th:href="@{/concert/{id}(id=${concert.id})}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-arrow-left me-2"></i>돌아가기
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>콘서트 티켓팅</h5>
+                    <p>국내 최고의 콘서트 티켓팅 플랫폼입니다.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>고객센터</h5>
+                    <p>전화: 1588-0000</p>
+                    <p>이메일: support@concert-ticket.co.kr</p>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2024 콘서트 티켓팅. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 결제 방법 선택
+        document.querySelectorAll('.payment-method').forEach(method => {
+            method.addEventListener('click', function() {
+                // 모든 선택 해제
+                document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+                // 현재 선택
+                this.classList.add('selected');
+                // 라디오 버튼 선택
+                this.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+        
+        // 폼 제출 전 확인
+        document.getElementById('bookingForm').addEventListener('submit', function(e) {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+            if (!paymentMethod) {
+                e.preventDefault();
+                alert('결제 방법을 선택해주세요.');
+                return false;
+            }
+            
+            if (!confirm('정말로 예매하시겠습니까?')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
