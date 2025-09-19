@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${concert.title} + ' - 콘서트 티켓팅'">콘서트 상세 - 콘서트 티켓팅</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .concert-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+        }
+        .concert-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .seat-map {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .seat {
+            width: 30px;
+            height: 30px;
+            margin: 2px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: inline-block;
+            text-align: center;
+            line-height: 28px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .seat.available {
+            background-color: #28a745;
+            color: white;
+        }
+        .seat.available:hover {
+            background-color: #218838;
+            transform: scale(1.1);
+        }
+        .seat.occupied {
+            background-color: #dc3545;
+            color: white;
+            cursor: not-allowed;
+        }
+        .seat.selected {
+            background-color: #007bff;
+            color: white;
+        }
+        .section-label {
+            font-weight: bold;
+            margin: 10px 0 5px 0;
+            color: #495057;
+        }
+        .booking-summary {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .footer {
+            background-color: #343a40;
+            color: white;
+            padding: 40px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-music me-2"></i>콘서트 티켓팅
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">홈</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/concerts">콘서트</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">로그인</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">회원가입</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Concert Hero -->
+    <section class="concert-hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3" th:text="${concert.title}"></h1>
+                    <p class="lead mb-3" th:text="${concert.artist}"></p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <span class="badge bg-light text-dark fs-6" th:text="${concert.category}"></span>
+                        <span class="badge bg-light text-dark fs-6" th:text="${concert.venue}"></span>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <img th:src="${concert.imageUrl}" 
+                         th:alt="${concert.title}" 
+                         class="concert-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Concert Details -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <!-- Concert Information -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h3 class="card-title">공연 정보</h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>공연일시:</strong> <span th:text="${#temporals.format(concert.concertDate, 'yyyy년 MM월 dd일 HH:mm')}"></span></p>
+                                    <p><strong>티켓 오픈:</strong> <span th:text="${#temporals.format(concert.ticketOpenDate, 'yyyy년 MM월 dd일 HH:mm')}"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>장소:</strong> <span th:text="${concert.venue}"></span></p>
+                                    <p><strong>좌석 수:</strong> <span th:text="${concert.availableSeats} + ' / ' + ${concert.totalSeats}"></span></p>
+                                </div>
+                            </div>
+                            <hr>
+                            <h5>공연 설명</h5>
+                            <p th:text="${concert.description}"></p>
+                        </div>
+                    </div>
+
+                    <!-- Seat Selection -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="card-title">좌석 선택</h3>
+                            <div class="seat-map">
+                                <div th:each="section : ${#sets.toSet(concert.seats.![section])}">
+                                    <div class="section-label" th:text="${section} + '석'"></div>
+                                    <div th:each="seat : ${concert.seats}" 
+                                         th:if="${seat.section == section}"
+                                         th:class="'seat ' + (${seat.available} ? 'available' : 'occupied')"
+                                         th:data-seat="${seat.seatNumber}"
+                                         th:data-price="${seat.price}"
+                                         th:data-grade="${seat.grade}"
+                                         th:text="${seat.number}"
+                                         onclick="selectSeat(this)"></div>
+                                    <br>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <span class="seat available" style="display: inline-block; width: 20px; height: 20px;"></span> 예약 가능
+                                    <span class="seat occupied ms-3" style="display: inline-block; width: 20px; height: 20px;"></span> 예약 완료
+                                    <span class="seat selected ms-3" style="display: inline-block; width: 20px; height: 20px;"></span> 선택됨
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Summary -->
+                <div class="col-lg-4">
+                    <div class="booking-summary">
+                        <h4>예매 요약</h4>
+                        <div id="selected-seats">
+                            <p class="text-muted">좌석을 선택해주세요</p>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>총 금액:</strong>
+                            <strong id="total-price">0원</strong>
+                        </div>
+                        <button class="btn btn-primary btn-lg w-100 mt-3" 
+                                id="booking-btn" 
+                                onclick="proceedBooking()" 
+                                disabled>
+                            예매하기
+                        </button>
+                        <small class="text-muted d-block mt-2 text-center">
+                            로그인이 필요합니다
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>콘서트 티켓팅</h5>
+                    <p>국내 최고의 콘서트 티켓팅 플랫폼입니다.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>고객센터</h5>
+                    <p>전화: 1588-0000</p>
+                    <p>이메일: support@concert-ticket.co.kr</p>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2024 콘서트 티켓팅. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedSeats = [];
+        let concertId = /*[[${concert.id}]]*/;
+
+        function selectSeat(element) {
+            if (element.classList.contains('occupied')) {
+                return;
+            }
+
+            const seatNumber = element.dataset.seat;
+            const price = parseInt(element.dataset.price);
+            const grade = element.dataset.grade;
+
+            if (element.classList.contains('selected')) {
+                // 좌석 선택 해제
+                element.classList.remove('selected');
+                selectedSeats = selectedSeats.filter(seat => seat.seatNumber !== seatNumber);
+            } else {
+                // 좌석 선택
+                element.classList.add('selected');
+                selectedSeats.push({
+                    seatNumber: seatNumber,
+                    price: price,
+                    grade: grade
+                });
+            }
+
+            updateBookingSummary();
+        }
+
+        function updateBookingSummary() {
+            const selectedSeatsDiv = document.getElementById('selected-seats');
+            const totalPriceSpan = document.getElementById('total-price');
+            const bookingBtn = document.getElementById('booking-btn');
+
+            if (selectedSeats.length === 0) {
+                selectedSeatsDiv.innerHTML = '<p class="text-muted">좌석을 선택해주세요</p>';
+                totalPriceSpan.textContent = '0원';
+                bookingBtn.disabled = true;
+            } else {
+                let html = '<h6>선택된 좌석:</h6>';
+                let totalPrice = 0;
+
+                selectedSeats.forEach(seat => {
+                    html += `<div class="d-flex justify-content-between">
+                                <span>${seat.seatNumber} (${seat.grade})</span>
+                                <span>${seat.price.toLocaleString()}원</span>
+                             </div>`;
+                    totalPrice += seat.price;
+                });
+
+                selectedSeatsDiv.innerHTML = html;
+                totalPriceSpan.textContent = totalPrice.toLocaleString() + '원';
+                bookingBtn.disabled = false;
+            }
+        }
+
+        function proceedBooking() {
+            if (selectedSeats.length === 0) {
+                alert('좌석을 선택해주세요.');
+                return;
+            }
+
+            // 로그인 체크 (실제로는 세션 체크)
+            if (!confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
+                return;
+            }
+
+            // 선택된 좌석 정보를 서버에 전송
+            const seatNumbers = selectedSeats.map(seat => seat.seatNumber);
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/session/set-seats';
+            
+            const seatsInput = document.createElement('input');
+            seatsInput.type = 'hidden';
+            seatsInput.name = 'selectedSeats';
+            seatsInput.value = seatNumbers.join(',');
+            
+            const concertInput = document.createElement('input');
+            concertInput.type = 'hidden';
+            concertInput.name = 'concertId';
+            concertInput.value = concertId;
+            
+            form.appendChild(seatsInput);
+            form.appendChild(concertInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+</body>
+</html>
